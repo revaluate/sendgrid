@@ -107,6 +107,11 @@ module SendGrid
     @sg_category = category
   end
 
+  # Set the SG pool
+  def sendgrid_pool(pool_name)
+    @sg_pool = pool_name
+  end
+
   # Call within mailer method to set send time for this mail
   def sendgrid_send_at(utc_timestamp)
     @sg_send_at = utc_timestamp
