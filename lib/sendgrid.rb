@@ -28,7 +28,7 @@ module SendGrid
                       :default_footer_text, :default_spamcheck_score, :default_sg_unique_args
       end
       attr_accessor :sg_category, :sg_options, :sg_disabled_options, :sg_recipients, :sg_substitutions,
-                    :subscriptiontrack_text, :footer_text, :spamcheck_score, :sg_unique_args, :sg_send_at
+                    :subscriptiontrack_text, :footer_text, :spamcheck_score, :sg_unique_args, :sg_send_at, :sg_pool
     end
 
     # NOTE: This commented-out approach may be a "safer" option for Rails 3, but it
@@ -50,6 +50,10 @@ module SendGrid
     # mailer method.
     def sendgrid_category(category)
       self.default_sg_category = category
+    end
+
+    def sendgrid_pool(pool_name)
+      self.sg_pool = pool_name
     end
 
     # Enables a default option for all emails.
@@ -228,6 +232,9 @@ module SendGrid
 
     #Set send_at if set by the user
     header_opts[:send_at] = @sg_send_at unless @sg_send_at.blank?
+
+    # Set pool
+    header_opts[:ip_pool] = @sg_pool if @sg_pool
 
     # Set multi-recipients
     if @sg_recipients && !@sg_recipients.empty?
