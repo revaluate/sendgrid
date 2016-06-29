@@ -10,7 +10,8 @@ module SendGrid
     :subscriptiontrack,
     :footer,
     :spamcheck,
-    :bypass_list_management
+    :bypass_list_management,
+    :asm_group_id
   ]
 
   VALID_GANALYTICS_OPTIONS = [
@@ -28,7 +29,7 @@ module SendGrid
                       :default_footer_text, :default_spamcheck_score, :default_sg_unique_args
       end
       attr_accessor :sg_category, :sg_options, :sg_disabled_options, :sg_recipients, :sg_substitutions,
-                    :subscriptiontrack_text, :footer_text, :spamcheck_score, :sg_unique_args, :sg_send_at, :sg_pool
+                    :subscriptiontrack_text, :footer_text, :spamcheck_score, :sg_unique_args, :sg_send_at, :sg_pool, :asm_group_id
     end
 
     # NOTE: This commented-out approach may be a "safer" option for Rails 3, but it
@@ -56,6 +57,10 @@ module SendGrid
       self.sg_pool = pool_name
     end
 
+    def sendgrid_asm_group(group_id)
+      self.asm_group_id = group_id
+    end
+
     # Enables a default option for all emails.
     # See documentation for details.
     #
@@ -71,7 +76,7 @@ module SendGrid
       self.default_sg_options = Array.new unless self.default_sg_options
       options.each { |option| self.default_sg_options << option if VALID_OPTIONS.include?(option) }
     end
-    
+
     # Sets the default text for subscription tracking (must be enabled).
     # There are two options:
     # 1. Add an unsubscribe link at the bottom of the email
@@ -110,6 +115,10 @@ module SendGrid
   # Set the SG pool
   def sendgrid_pool(pool_name)
     @sg_pool = pool_name
+  end
+
+  def sendgrid_asm_group(group_id)
+    @asm_group_id = group_id
   end
 
   # Call within mailer method to set send time for this mail
@@ -170,7 +179,7 @@ module SendGrid
     @ganalytics_options = []
     options.each { |option| @ganalytics_options << option if VALID_GANALYTICS_OPTIONS.include?(option[0].to_sym) }
   end
-  
+
   # only override the appropriate methods for the current ActionMailer version
   if ActionMailer::Base.respond_to?(:mail)
 
@@ -215,7 +224,7 @@ module SendGrid
 
     #if not called within the mailer method, this will be nil so we default to empty hash
     @sg_unique_args = @sg_unique_args || {}
-    
+
     # set the unique arguments
     if @sg_unique_args || self.class.default_sg_unique_args
       unique_args = self.class.default_sg_unique_args || {}
@@ -240,6 +249,10 @@ module SendGrid
 
     # Set pool
     header_opts[:ip_pool] = @sg_pool if @sg_pool
+
+    # Set ASM Group
+    # how does this handle the text of the link?
+    header_opts[:asm_group_id] = @asm_group_id if @asm_group_id
 
     # Set multi-recipients
     if @sg_recipients && !@sg_recipients.empty?
